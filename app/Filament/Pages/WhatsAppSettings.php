@@ -102,21 +102,31 @@ class WhatsAppSettings extends Page implements HasForms
 
             if ($response->successful()) {
                 $body = $response->json();
-                
-                // Handle array response
-                if (is_array($body) && isset($body[0]['data']['base64'])) {
-                    $this->qr_code = $body[0]['data']['base64'];
+                $base64 = null;
+
+                // Try to find base64 in different structures
+                if (isset($body[0]['data']['base64'])) {
+                    $base64 = $body[0]['data']['base64'];
+                } elseif (isset($body['data']['base64'])) {
+                    $base64 = $body['data']['base64'];
+                } elseif (isset($body['base64'])) {
+                    $base64 = $body['base64'];
+                }
+
+                if ($base64) {
+                    $this->qr_code = $base64;
                     
                     Notification::make()
                         ->success()
                         ->title('QR Code gerado com sucesso')
-                        ->body('Escaneie o QR Code para conectar.')
                         ->send();
+
+                    $this->dispatch('open-modal', id: 'qr-code-modal');
                 } else {
                     Notification::make()
                         ->warning()
                         ->title('Conexão iniciada')
-                        ->body('Verifique se o QR Code foi gerado corretamente.')
+                        ->body('Resposta recebida, mas não foi possível encontrar o QR Code. Verifique o formato do JSON.')
                         ->send();
                 }
             } else {
