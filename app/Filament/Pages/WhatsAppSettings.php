@@ -17,7 +17,7 @@ class WhatsAppSettings extends Page implements HasForms
     use InteractsWithForms;
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
-    protected static ?string $navigationGroup = 'Settings';
+    protected static ?string $navigationGroup = 'Configurações';
     protected static ?string $navigationLabel = 'WhatsApp Connection';
     protected static ?string $title = 'WhatsApp Configuration';
 
