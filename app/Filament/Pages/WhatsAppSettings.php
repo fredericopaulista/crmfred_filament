@@ -101,13 +101,29 @@ class WhatsAppSettings extends Page implements HasForms
             ]);
 
             if ($response->successful()) {
-                $contentType = $response->header('Content-Type');
-                
-                // Check if response is an image or treat as binary if not JSON
-                if (str_contains($contentType, 'image') || !is_array($response->json())) {
-                    $base64Image = base64_encode($response->body());
-                    $mimeType = $contentType ?? 'image/png'; // Default to png if unknown
-                    $this->qr_code = "data:{$mimeType};base64,{$base64Image}";
+                $bodyContent = $response->body();
+                $json = json_decode($bodyContent, true);
+                $base64 = null;
+
+                // Check if valid JSON
+                if (json_last_error() === JSON_ERROR_NONE && is_array($json)) {
+                    // Handle JSON response
+                    if (isset($json[0]['data']['base64'])) {
+                        $base64 = $json[0]['data']['base64'];
+                    } elseif (isset($json['data']['base64'])) {
+                        $base64 = $json['data']['base64'];
+                    } elseif (isset($json['base64'])) {
+                        $base64 = $json['base64'];
+                    }
+                } else {
+                    // Handle Binary response
+                    $base64Image = base64_encode($bodyContent);
+                    $contentType = $response->header('Content-Type') ?? 'image/png';
+                    $base64 = "data:{$contentType};base64,{$base64Image}";
+                }
+
+                if ($base64) {
+                    $this->qr_code = $base64;
                     
                     Notification::make()
                         ->success()
@@ -116,29 +132,11 @@ class WhatsAppSettings extends Page implements HasForms
 
                     $this->dispatch('open-modal', id: 'qr-code-modal');
                 } else {
-                    // Fallback for JSON response (just in case)
-                    $body = $response->json();
-                    $base64 = null;
-
-                    if (isset($body[0]['data']['base64'])) {
-                        $base64 = $body[0]['data']['base64'];
-                    } elseif (isset($body['data']['base64'])) {
-                        $base64 = $body['data']['base64'];
-                    } elseif (isset($body['base64'])) {
-                        $base64 = $body['base64'];
-                    }
-
-                    if ($base64) {
-                        $this->qr_code = $base64;
-                        Notification::make()->success()->title('QR Code gerado')->send();
-                        $this->dispatch('open-modal', id: 'qr-code-modal');
-                    } else {
-                        Notification::make()
-                            ->warning()
-                            ->title('Resposta inesperada')
-                            ->body('Não foi possível identificar o QR Code na resposta.')
-                            ->send();
-                    }
+                    Notification::make()
+                        ->warning()
+                        ->title('Resposta inesperada')
+                        ->body('Não foi possível processar o QR Code.')
+                        ->send();
                 }
             } else {
                 Notification::make()
