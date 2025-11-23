@@ -155,4 +155,35 @@ class WhatsAppSettings extends Page implements HasForms
                 ->send();
         }
     }
+    public function checkConnectionStatus(): void
+    {
+        $url = 'https://webhook.fredericomoura.com.br/webhook/checa-status';
+        $instanceName = $this->data['instance_name'] ?? null;
+
+        try {
+            $response = Http::post($url, [
+                'instance_name' => $instanceName,
+                'timestamp' => now()->toIso8601String(),
+            ]);
+
+            if ($response->successful()) {
+                Notification::make()
+                    ->success()
+                    ->title('Status da conexão verificado')
+                    ->body('O sistema verificou o status da conexão.')
+                    ->send();
+                
+                // Optional: Close modal if connected
+                // $this->dispatch('close-modal', id: 'qr-code-modal');
+            } else {
+                Notification::make()
+                    ->warning()
+                    ->title('Verificação de status')
+                    ->body('Não foi possível confirmar a conexão no momento.')
+                    ->send();
+            }
+        } catch (\Exception $e) {
+            // Silent fail or log
+        }
+    }
 }
