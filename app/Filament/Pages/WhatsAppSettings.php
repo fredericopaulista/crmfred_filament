@@ -101,33 +101,44 @@ class WhatsAppSettings extends Page implements HasForms
             ]);
 
             if ($response->successful()) {
-                $body = $response->json();
-                $base64 = null;
-
-                // Try to find base64 in different structures
-                if (isset($body[0]['data']['base64'])) {
-                    $base64 = $body[0]['data']['base64'];
-                } elseif (isset($body['data']['base64'])) {
-                    $base64 = $body['data']['base64'];
-                } elseif (isset($body['base64'])) {
-                    $base64 = $body['base64'];
-                }
-
-                if ($base64) {
-                    $this->qr_code = $base64;
+                $contentType = $response->header('Content-Type');
+                
+                // Check if response is an image or treat as binary if not JSON
+                if (str_contains($contentType, 'image') || !is_array($response->json())) {
+                    $base64Image = base64_encode($response->body());
+                    $mimeType = $contentType ?? 'image/png'; // Default to png if unknown
+                    $this->qr_code = "data:{$mimeType};base64,{$base64Image}";
                     
                     Notification::make()
                         ->success()
-                        ->title('QR Code gerado com sucesso')
+                        ->title('QR Code recebido')
                         ->send();
 
                     $this->dispatch('open-modal', id: 'qr-code-modal');
                 } else {
-                    Notification::make()
-                        ->warning()
-                        ->title('Conexão iniciada')
-                        ->body('Resposta recebida, mas não foi possível encontrar o QR Code. Verifique o formato do JSON.')
-                        ->send();
+                    // Fallback for JSON response (just in case)
+                    $body = $response->json();
+                    $base64 = null;
+
+                    if (isset($body[0]['data']['base64'])) {
+                        $base64 = $body[0]['data']['base64'];
+                    } elseif (isset($body['data']['base64'])) {
+                        $base64 = $body['data']['base64'];
+                    } elseif (isset($body['base64'])) {
+                        $base64 = $body['base64'];
+                    }
+
+                    if ($base64) {
+                        $this->qr_code = $base64;
+                        Notification::make()->success()->title('QR Code gerado')->send();
+                        $this->dispatch('open-modal', id: 'qr-code-modal');
+                    } else {
+                        Notification::make()
+                            ->warning()
+                            ->title('Resposta inesperada')
+                            ->body('Não foi possível identificar o QR Code na resposta.')
+                            ->send();
+                    }
                 }
             } else {
                 Notification::make()
