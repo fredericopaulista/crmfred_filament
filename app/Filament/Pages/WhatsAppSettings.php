@@ -28,6 +28,31 @@ class WhatsAppSettings extends Page implements HasForms
 
     // ...
 
+    public function save(): void
+    {
+        $data = $this->form->getState();
+
+        Setting::updateOrCreate(
+            ['key' => 'n8n_webhook_url'],
+            ['value' => $data['n8n_webhook_url']]
+        );
+
+        Setting::updateOrCreate(
+            ['key' => 'phone_number'],
+            ['value' => $data['phone_number']]
+        );
+
+        Setting::updateOrCreate(
+            ['key' => 'instance_name'],
+            ['value' => $data['instance_name']]
+        );
+
+        Notification::make()
+            ->success()
+            ->title('Settings saved successfully')
+            ->send();
+    }
+
     public function connect(): void
     {
         $this->save();
