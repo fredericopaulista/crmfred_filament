@@ -26,7 +26,39 @@ class WhatsAppSettings extends Page implements HasForms
 
     public ?string $qr_code = null;
 
-    // ...
+    public ?array $data = [];
+
+    public function mount(): void
+    {
+        $defaultInstanceName = auth()->user()->name . '_' . rand(0, 10);
+
+        $this->form->fill([
+            'n8n_webhook_url' => Setting::where('key', 'n8n_webhook_url')->value('value') ?? 'https://n8n.fredericomoura.com.br/webhook-test/cria-instancia',
+            'phone_number' => Setting::where('key', 'phone_number')->value('value'),
+            'instance_name' => Setting::where('key', 'instance_name')->value('value') ?? $defaultInstanceName,
+        ]);
+    }
+
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                TextInput::make('n8n_webhook_url')
+                    ->label('n8n Webhook URL')
+                    ->required()
+                    ->url()
+                    ->columnSpanFull(),
+                Hidden::make('instance_name')
+                    ->required(),
+                TextInput::make('phone_number')
+                    ->label('Número do WhatsApp')
+                    ->placeholder('+5531999999999')
+                    ->helperText('Formato: +5531999999999')
+                    ->required()
+                    ->columnSpanFull(),
+            ])
+            ->statePath('data');
+    }
 
     public function save(): void
     {
