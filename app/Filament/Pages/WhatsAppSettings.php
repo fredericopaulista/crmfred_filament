@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Setting;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -27,9 +28,12 @@ class WhatsAppSettings extends Page implements HasForms
 
     public function mount(): void
     {
+        $defaultInstanceName = auth()->user()->name . '_' . rand(0, 10);
+
         $this->form->fill([
             'n8n_webhook_url' => Setting::where('key', 'n8n_webhook_url')->value('value') ?? 'https://n8n.fredericomoura.com.br/webhook-test/cria-instancia',
             'phone_number' => Setting::where('key', 'phone_number')->value('value'),
+            'instance_name' => Setting::where('key', 'instance_name')->value('value') ?? $defaultInstanceName,
         ]);
     }
 
@@ -42,6 +46,12 @@ class WhatsAppSettings extends Page implements HasForms
                     ->required()
                     ->url()
                     ->columnSpanFull(),
+use Filament\Forms\Components\Hidden;
+
+// ...
+
+                Hidden::make('instance_name')
+                    ->required(),
                 TextInput::make('phone_number')
                     ->label('Número do WhatsApp')
                     ->placeholder('+55DDD999999999')
@@ -66,6 +76,11 @@ class WhatsAppSettings extends Page implements HasForms
             ['value' => $data['phone_number']]
         );
 
+        Setting::updateOrCreate(
+            ['key' => 'instance_name'],
+            ['value' => $data['instance_name']]
+        );
+
         Notification::make()
             ->success()
             ->title('Settings saved successfully')
@@ -77,11 +92,13 @@ class WhatsAppSettings extends Page implements HasForms
         $this->save();
         $url = $this->data['n8n_webhook_url'];
         $phone = $this->data['phone_number'];
+        $instanceName = $this->data['instance_name'];
 
         try {
             $response = Http::post($url, [
                 'action' => 'create_instance',
                 'phone_number' => $phone,
+                'instance_name' => $instanceName,
                 'timestamp' => now()->toIso8601String(),
             ]);
 
