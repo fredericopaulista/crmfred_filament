@@ -46,16 +46,12 @@ class WhatsAppSettings extends Page implements HasForms
                     ->required()
                     ->url()
                     ->columnSpanFull(),
-use Filament\Forms\Components\Hidden;
-
-// ...
-
                 Hidden::make('instance_name')
                     ->required(),
                 TextInput::make('phone_number')
                     ->label('Número do WhatsApp')
-                    ->placeholder('+55DDD999999999')
-                    ->helperText('Formato: +55DDD999999999')
+                    ->placeholder('+5531999999999')
+                    ->helperText('Formato: +5531999999999')
                     ->required()
                     ->columnSpanFull(),
             ])
