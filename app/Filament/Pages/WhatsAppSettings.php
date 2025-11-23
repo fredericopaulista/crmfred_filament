@@ -29,6 +29,7 @@ class WhatsAppSettings extends Page implements HasForms
     {
         $this->form->fill([
             'n8n_webhook_url' => Setting::where('key', 'n8n_webhook_url')->value('value') ?? 'https://n8n.fredericomoura.com.br/webhook-test/cria-instancia',
+            'phone_number' => Setting::where('key', 'phone_number')->value('value'),
         ]);
     }
 
@@ -40,6 +41,12 @@ class WhatsAppSettings extends Page implements HasForms
                     ->label('n8n Webhook URL')
                     ->required()
                     ->url()
+                    ->columnSpanFull(),
+                TextInput::make('phone_number')
+                    ->label('Número do WhatsApp')
+                    ->placeholder('+55DDD999999999')
+                    ->helperText('Formato: +55DDD999999999')
+                    ->required()
                     ->columnSpanFull(),
             ])
             ->statePath('data');
@@ -54,6 +61,11 @@ class WhatsAppSettings extends Page implements HasForms
             ['value' => $data['n8n_webhook_url']]
         );
 
+        Setting::updateOrCreate(
+            ['key' => 'phone_number'],
+            ['value' => $data['phone_number']]
+        );
+
         Notification::make()
             ->success()
             ->title('Settings saved successfully')
@@ -64,10 +76,12 @@ class WhatsAppSettings extends Page implements HasForms
     {
         $this->save();
         $url = $this->data['n8n_webhook_url'];
+        $phone = $this->data['phone_number'];
 
         try {
             $response = Http::post($url, [
                 'action' => 'create_instance',
+                'phone_number' => $phone,
                 'timestamp' => now()->toIso8601String(),
             ]);
 

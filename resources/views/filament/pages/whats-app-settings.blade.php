@@ -13,7 +13,7 @@
                 wire:click="connect"
                 wire:loading.attr="disabled"
             >
-                Connect / Create Instance
+                Conectar
             </x-filament::button>
         </div>
     </x-filament-panels::form>
