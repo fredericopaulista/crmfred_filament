@@ -24,64 +24,9 @@ class WhatsAppSettings extends Page implements HasForms
 
     protected static string $view = 'filament.pages.whats-app-settings';
 
-    public ?array $data = [];
+    public ?string $qr_code = null;
 
-    public function mount(): void
-    {
-        $defaultInstanceName = auth()->user()->name . '_' . rand(0, 10);
-
-        $this->form->fill([
-            'n8n_webhook_url' => Setting::where('key', 'n8n_webhook_url')->value('value') ?? 'https://n8n.fredericomoura.com.br/webhook-test/cria-instancia',
-            'phone_number' => Setting::where('key', 'phone_number')->value('value'),
-            'instance_name' => Setting::where('key', 'instance_name')->value('value') ?? $defaultInstanceName,
-        ]);
-    }
-
-    public function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                TextInput::make('n8n_webhook_url')
-                    ->label('n8n Webhook URL')
-                    ->required()
-                    ->url()
-                    ->columnSpanFull(),
-                Hidden::make('instance_name')
-                    ->required(),
-                TextInput::make('phone_number')
-                    ->label('Número do WhatsApp')
-                    ->placeholder('+5531999999999')
-                    ->helperText('Formato: +5531999999999')
-                    ->required()
-                    ->columnSpanFull(),
-            ])
-            ->statePath('data');
-    }
-
-    public function save(): void
-    {
-        $data = $this->form->getState();
-
-        Setting::updateOrCreate(
-            ['key' => 'n8n_webhook_url'],
-            ['value' => $data['n8n_webhook_url']]
-        );
-
-        Setting::updateOrCreate(
-            ['key' => 'phone_number'],
-            ['value' => $data['phone_number']]
-        );
-
-        Setting::updateOrCreate(
-            ['key' => 'instance_name'],
-            ['value' => $data['instance_name']]
-        );
-
-        Notification::make()
-            ->success()
-            ->title('Settings saved successfully')
-            ->send();
-    }
+    // ...
 
     public function connect(): void
     {
@@ -99,22 +44,35 @@ class WhatsAppSettings extends Page implements HasForms
             ]);
 
             if ($response->successful()) {
-                Notification::make()
-                    ->success()
-                    ->title('Connection request sent successfully')
-                    ->body('n8n responded with: ' . $response->body())
-                    ->send();
+                $body = $response->json();
+                
+                // Handle array response
+                if (is_array($body) && isset($body[0]['data']['base64'])) {
+                    $this->qr_code = $body[0]['data']['base64'];
+                    
+                    Notification::make()
+                        ->success()
+                        ->title('QR Code gerado com sucesso')
+                        ->body('Escaneie o QR Code para conectar.')
+                        ->send();
+                } else {
+                    Notification::make()
+                        ->warning()
+                        ->title('Conexão iniciada')
+                        ->body('Verifique se o QR Code foi gerado corretamente.')
+                        ->send();
+                }
             } else {
                 Notification::make()
                     ->danger()
-                    ->title('Connection failed')
-                    ->body('n8n responded with error: ' . $response->status())
+                    ->title('Falha na conexão')
+                    ->body('Erro: ' . $response->status())
                     ->send();
             }
         } catch (\Exception $e) {
             Notification::make()
                 ->danger()
-                ->title('Connection error')
+                ->title('Erro de conexão')
                 ->body($e->getMessage())
                 ->send();
         }
