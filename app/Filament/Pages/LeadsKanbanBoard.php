@@ -13,9 +13,9 @@ class LeadsKanbanBoard extends KanbanBoard
     protected static ?string $navigationGroup = 'Vendas';
     protected static ?int $navigationSort = 2;
 
-    protected function statuses(): array
+    protected function statuses(): \Illuminate\Support\Collection
     {
-        return [
+        return collect([
             [
                 'id' => 'new',
                 'title' => 'Novo',
@@ -40,7 +40,7 @@ class LeadsKanbanBoard extends KanbanBoard
                 'id' => 'lost',
                 'title' => 'Perdido',
             ],
-        ];
+        ]);
     }
 
     protected function records(): \Illuminate\Support\Collection
