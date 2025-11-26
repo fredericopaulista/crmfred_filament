@@ -7,7 +7,7 @@ use Mokhosh\FilamentKanban\Pages\KanbanBoard;
 
 class LeadsKanbanBoard extends KanbanBoard
 {
-    protected static ?string $model = Lead::class;
+    protected static string $model = Lead::class;
     protected static ?string $title = 'Pipeline de Vendas';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationGroup = 'Vendas';
