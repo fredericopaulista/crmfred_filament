@@ -52,4 +52,37 @@ class LeadsKanbanBoard extends KanbanBoard
     {
         Lead::find($recordId)->update(['status' => $status]);
     }
+
+    public function onSortChanged(int|string $recordId, string $status, array $orderedIds): void
+    {
+        // Optional: Implement sorting logic if needed
+    }
+
+    protected function getEditModalFormSchema(null|int|string $recordId): array
+    {
+        return [
+            // Optional: Add form fields for editing the record in a modal
+        ];
+    }
+
+    protected function getEditModalRecordData(null|int|string $recordId): array
+    {
+        return Lead::find($recordId)->toArray();
+    }
+
+    protected function editRecord(int|string $recordId, array $data, array $state): void
+    {
+        Lead::find($recordId)->update($data);
+    }
+    
+    // Customize the card content
+    protected function recordTitle(mixed $record): string
+    {
+        return $record->name;
+    }
+
+    protected function recordContent(mixed $record): string
+    {
+        return $record->phone ?? 'Sem telefone';
+    }
 }
