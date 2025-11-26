@@ -36,12 +36,12 @@ class LeadResource extends Resource
                     ->default(null),
                 Forms\Components\Select::make('status')
                     ->options([
-                        'new' => 'New',
-                        'contacted' => 'Contacted',
-                        'qualified' => 'Qualified',
-                        'proposal_sent' => 'Proposal Sent',
-                        'won' => 'Won',
-                        'lost' => 'Lost',
+                        'new' => 'Novo',
+                        'contacted' => 'Contatado',
+                        'qualified' => 'Qualificado',
+                        'negotiation' => 'Em Negociação',
+                        'won' => 'Ganho',
+                        'lost' => 'Perdido',
                     ])
                     ->required()
                     ->default('new'),
@@ -73,9 +73,10 @@ class LeadResource extends Resource
                         'new' => 'gray',
                         'contacted' => 'info',
                         'qualified' => 'success',
-                        'proposal_sent' => 'warning',
+                        'negotiation' => 'warning',
                         'won' => 'success',
                         'lost' => 'danger',
+                        default => 'gray',
                     })
                     ->searchable(),
                 Tables\Columns\TextColumn::make('source')
