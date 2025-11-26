@@ -48,7 +48,7 @@ class LeadsKanbanBoard extends KanbanBoard
         return Lead::all();
     }
 
-    public function onStatusChanged(int $recordId, string $status, array $fromOrderedIds, array $toOrderedIds): void
+    public function onStatusChanged(int|string $recordId, string $status, array $fromOrderedIds, array $toOrderedIds): void
     {
         Lead::find($recordId)->update(['status' => $status]);
     }
